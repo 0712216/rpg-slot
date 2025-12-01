@@ -1,5 +1,5 @@
 // sw.js
-const CACHE_NAME = 'rpg-slot-v2';  // 之後更新可以改這個字串
+const CACHE_NAME = 'rpg-slot-v0.2';  // 之後更新可以改這個字串
 const ASSETS = [
     './',
     './index.html',
