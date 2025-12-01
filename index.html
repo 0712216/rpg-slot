@@ -54,6 +54,71 @@
       box-shadow: 0 1px 2px rgba(0, 0, 0, .04);
       padding: 12px 16px;
     }
+        /* 規則對話框相關樣式 */
+    .rules-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.5); /* 約 50% 不透明度 */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .2s ease;
+      z-index: 50;
+    }
+
+    .rules-overlay.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .rules-dialog {
+      background: #0f172a;
+      border-radius: 16px;
+      padding: 20px 20px 48px;
+      max-width: 520px;
+      width: calc(100% - 32px);
+      box-shadow: 0 24px 80px rgba(0, 0, 0, .7);
+      position: relative;
+      border: 1px solid rgba(148, 163, 184, 0.6);
+      color: #e5e7eb; /* 確保文字是亮色 */
+    }
+
+    .rules-dialog h2 {
+      margin: 0 0 8px;
+      font-size: 20px;
+    }
+
+    .rules-dialog p {
+      margin: 4px 0;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .rules-dialog ul {
+      margin: 6px 0 0 18px;
+      padding: 0;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .rules-dialog li {
+      margin-bottom: 4px;
+    }
+
+    .rules-close-btn {
+      position: absolute;
+      right: 16px;
+      bottom: 12px;
+      padding: 4px 12px;
+      border-radius: 999px;
+      border: 1px solid #64748b;
+      background: rgba(15, 23, 42, 0.9);
+      color: #e5e7eb;
+      font-size: 12px;
+      cursor: pointer;
+    }
 
     .btn {
       padding: 12px 20px;
@@ -170,7 +235,7 @@
   <div class="wrap">
     <h1>5×3 RPG 主題拉霸機（HTML+JS 原型）</h1>
     <div class="muted">含 Wild（★ Arcane）與 Scatter（✦ Deity）；10 條固定線；左至右判定。</div>
-
+    <button id="rulesBtn" class="btn" style="padding:4px 10px; font-size:12px;">規則</button>
     <div class="topbar">
       <div class="card">
         <div class="muted">上次總擊中（攻擊力）</div>
@@ -208,25 +273,14 @@
       </div>
     </div>
     <!-- 戰鬥／押注 UI -->
-    <div class="card" style="margin-top:12px; display:grid; grid-template-columns: 1fr 1fr 1fr; gap:12px;">
-      <div>
-        <div class="muted">押注（每局）</div>
-        <input id="bet" type="number" value="10" min="1" step="1"
-          style="width:100%; padding:8px; border-radius:10px; border:1px solid #cbd5e1;">
-      </div>
+    <div class="card" style="margin-top:12px; display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
       <div>
         <div class="muted">錢包（Balance）</div>
         <div id="balance" class="mono" style="font-size:20px; font-weight:800;">0</div>
       </div>
       <div>
         <div class="muted">怪物屬性</div>
-        <select id="monsterAttr" style="width:100%; padding:8px; border-radius:10px; border:1px solid #cbd5e1;">
-          <option>水</option>
-          <option selected>火</option>
-          <option>木</option>
-          <option>光</option>
-          <option>暗</option>
-        </select>
+        <div id="monsterAttr" class="mono" style="font-size:20px; font-weight:800;">火</div>
       </div>
     </div>
 
@@ -241,12 +295,58 @@
       </div>
     </div>
 
-    <div class="muted" style="margin-top:18px;">Prototype v0.1 · 僅供原型測試，尚未調 RTP/Volatility。</div>
+    <div class="muted" style="margin-top:18px;">v2 2025/12/01</div>
   </div>
+
+      <!-- 規則對話框 -->
+      <div id="rulesOverlay" class="rules-overlay">
+        <div class="rules-dialog">
+          <h2>遊戲規則說明</h2>
+          <p>本遊戲為 5×3 格 RPG 主題拉霸機，怪物屬性隨機輪替，玩家以 HP 代表現實貨幣。</p>
+      
+          <ul>
+            <li>每局由莊家收取現金並換成 HP，目前設定為：新台幣 100 元 → 100 HP。</li>
+            <li>每次付費 SPIN 消耗固定 5 HP；FREE SPIN 不消耗 HP。</li>
+            <li>玩家 HP 歸零時，本局立即結束，無法再 SPIN，請洽莊家是否加值開新局。</li>
+            <li>怪物 HP 目前為 100，受到傷害累積至 100 以上時視為擊殺。</li>
+            <li>每次擊殺怪物可獲得固定獎勵，目前為 30 金幣，累積於錢包（Balance）。</li>
+            <li>當超額傷害（Overkill）達到怪物 HP 的 1 倍或 2 倍時，會額外獲得 FREE SPIN（依實作規則）。</li>
+            <li>符號屬性（水、火、木、光、暗）依克制關係給予 1.5 倍傷害加成；Wild（★）可替任何屬性，Scatter（✦）依規則提供額外傷害。</li>
+            <li>局末由莊家依錢包金幣數量換回現金（目前直觀設定為 1 金幣 ≈ 1 元，可視實際活動再調整）。</li>
+          </ul>
+      
+          <button id="rulesCloseBtn" class="rules-close-btn">關閉</button>
+        </div>
+      </div>
 
   <!-- 掛載遊戲腳本（請與 index.html 同資料夾） -->
   <script src="slot.js"></script>
   <script src="combat.js"></script>
+  <!-- 規則對話框控制 -->
+  <script>
+    (function () {
+      const btn = document.getElementById('rulesBtn');
+      const overlay = document.getElementById('rulesOverlay');
+      const closeBtn = document.getElementById('rulesCloseBtn');
+
+      if (!btn || !overlay || !closeBtn) return;
+
+      btn.addEventListener('click', () => {
+        overlay.classList.add('show');
+      });
+
+      closeBtn.addEventListener('click', () => {
+        overlay.classList.remove('show');
+      });
+
+      // 點擊遮罩空白處也關閉
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) {
+          overlay.classList.remove('show');
+        }
+      });
+    })();
+  </script>
   <script>
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('./sw.js')

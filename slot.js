@@ -48,7 +48,7 @@
   // 三屬性基本傷害=2；雙屬性基本傷害=4；Wild-only 基礎傷害=250（僅限前綴連續 Wild 計分）
   const BASE_DAMAGE = { tri: 2, dual: 4};
   const WILD_BASE = 250;
-  // 連線倍率：3→x5、4→x15、5→x50
+  // 連線倍率：3→x4、4→x15、5→x50
   const MULTIPLIER = { 3: 4, 4: 15, 5: 60 };
 
   // 固定 10 條線（MVP）。可擴充或切換成 243/1024 Ways。
@@ -304,7 +304,6 @@
 
     // 還原按鈕狀態（FREE 的 enable/disable 交給 combat.js）
     if (elSpin) {
-      elSpin.disabled = false;
       elSpin.textContent = 'SPIN 旋轉';
     }
     spinning = false;
