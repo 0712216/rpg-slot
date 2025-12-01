@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="zh-Hant">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>5×3 RPG 主題拉霸機（HTML+JS 原型）</title>
+  <!-- 暫留最小必要樣式；之後可獨立出 styles.css -->
+  <style>
+    :root {
+      --cell: 88px;
+      --gap: 12px;
+      --radius: 16px;
+    }
+
+    body {
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans TC", Arial;
+      background: #f6f7fb;
+      color: #0f172a;
+      margin: 0;
+    }
+
+    .wrap {
+      max-width: 980px;
+      margin: 32px auto;
+      padding: 0 16px;
+    }
+
+    h1 {
+      font-size: 24px;
+      margin: 0 0 8px;
+    }
+
+    .muted {
+      color: #64748b;
+      font-size: 13px;
+    }
+
+    .topbar {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      gap: 16px;
+      margin: 16px 0;
+    }
+
+    .card {
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 16px;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, .04);
+      padding: 12px 16px;
+    }
+
+    .btn {
+      padding: 12px 20px;
+      border-radius: 14px;
+      border: 0;
+      background: #4f46e5;
+      color: #fff;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(79, 70, 229, .25);
+    }
+
+    .btn[disabled] {
+      opacity: .55;
+      cursor: not-allowed;
+    }
+
+    .slot {
+      position: relative;
+      background: linear-gradient(#e2e8f0, #eef2f7);
+      border: 1px solid #e2e8f0;
+      border-radius: 24px;
+      padding: 12px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: var(--gap);
+    }
+
+    .col {
+      display: grid;
+      grid-template-rows: repeat(3, 1fr);
+      gap: var(--gap);
+    }
+
+    .cell {
+      width: var(--cell);
+      height: var(--cell);
+      display: grid;
+      place-items: center;
+      font-size: 34px;
+      font-weight: 800;
+      border-radius: var(--radius);
+      border: 1px solid #e5e7eb;
+      background: #fff;
+      box-shadow: inset 0 -2px 0 rgba(0, 0, 0, .04);
+      transition: transform .12s ease;
+    }
+
+    .cell.win {
+      outline: 4px solid #10b981;
+      box-shadow: 0 0 0 2px #bbf7d0, inset 0 -2px 0 rgba(0, 0, 0, .04);
+      transform: translateY(-2px);
+    }
+
+    .chip {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .chip-blue {
+      background: #dbeafe;
+      color: #1e40af;
+    }
+
+    .chip-red {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    .chip-green {
+      background: #dcfce7;
+      color: #14532d;
+    }
+
+    .chip-yellow {
+      background: #fef9c3;
+      color: #854d0e;
+    }
+
+    .chip-purple {
+      background: #f3e8ff;
+      color: #6b21a8;
+    }
+
+    .chip-indigo {
+      background: #e0e7ff;
+      color: #3730a3;
+    }
+
+    .chip-amber {
+      background: #fde68a;
+      color: #78350f;
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .mono {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <h1>5×3 RPG 主題拉霸機（HTML+JS 原型）</h1>
+    <div class="muted">含 Wild（★ Arcane）與 Scatter（✦ Deity）；10 條固定線；左至右判定。</div>
+
+    <div class="topbar">
+      <div class="card">
+        <div class="muted">上次總擊中（攻擊力）</div>
+        <div id="lastWin" style="font-size:28px; font-weight:800;">0</div>
+      </div>
+      <div style="text-align:center; display:flex; flex-direction:column; gap:8px; align-items:center;">
+        <button id="spinBtn" class="btn">SPIN 旋轉</button>
+        <button id="freeSpinBtn" class="btn" disabled>FREE SPIN (0)</button>
+      </div>
+      <div class="card" style="text-align:right;">
+        <div class="muted">Scatter（✦）</div>
+        <div class="mono">有連線：總傷害 × (1 + 0.5×n)<br />無連線：每枚 +5</div>
+      </div>
+    </div>
+
+    <div class="slot">
+      <div id="grid" class="grid"></div>
+    </div>
+
+    <div class="card" style="margin-top:12px;">
+      <div class="muted">本局明細</div>
+      <div id="detail" class="mono" style="margin-top:6px; word-break: break-word;">—</div>
+    </div>
+
+    <div class="card" style="margin-top:12px;">
+      <div class="muted" style="margin-bottom:6px;">符號對照</div>
+      <div class="legend">
+        <span class="chip chip-blue">水</span>
+        <span class="chip chip-red">火</span>
+        <span class="chip chip-green">木</span>
+        <span class="chip chip-yellow">光</span>
+        <span class="chip chip-purple">暗</span>
+        <span class="chip chip-indigo">★ Wild</span>
+        <span class="chip chip-amber">✦ Scatter</span>
+      </div>
+    </div>
+    <!-- 戰鬥／押注 UI -->
+    <div class="card" style="margin-top:12px; display:grid; grid-template-columns: 1fr 1fr 1fr; gap:12px;">
+      <div>
+        <div class="muted">押注（每局）</div>
+        <input id="bet" type="number" value="10" min="1" step="1"
+          style="width:100%; padding:8px; border-radius:10px; border:1px solid #cbd5e1;">
+      </div>
+      <div>
+        <div class="muted">錢包（Balance）</div>
+        <div id="balance" class="mono" style="font-size:20px; font-weight:800;">1000</div>
+      </div>
+      <div>
+        <div class="muted">怪物屬性</div>
+        <select id="monsterAttr" style="width:100%; padding:8px; border-radius:10px; border:1px solid #cbd5e1;">
+          <option>水</option>
+          <option selected>火</option>
+          <option>木</option>
+          <option>光</option>
+          <option>暗</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:12px; display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+      <div>
+        <div class="muted">玩家 HP</div>
+        <div class="mono"><span id="pHp">100</span> / <span id="pHpMax">100</span></div>
+      </div>
+      <div style="text-align:right;">
+        <div class="muted">怪物 HP</div>
+        <div class="mono"><span id="mHp">120</span> / <span id="mHpMax">120</span></div>
+      </div>
+    </div>
+
+    <div class="muted" style="margin-top:18px;">Prototype v0.1 · 僅供原型測試，尚未調 RTP/Volatility。</div>
+  </div>
+
+  <!-- 掛載遊戲腳本（請與 index.html 同資料夾） -->
+  <script src="slot.js"></script>
+  <script src="combat.js"></script>
+</body>
+
+</html>
