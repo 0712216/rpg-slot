@@ -2,6 +2,9 @@
 <html lang="zh-Hant">
 
 <head>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#4f46e5">
+
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>5×3 RPG 主題拉霸機（HTML+JS 原型）</title>
@@ -213,7 +216,7 @@
       </div>
       <div>
         <div class="muted">錢包（Balance）</div>
-        <div id="balance" class="mono" style="font-size:20px; font-weight:800;">1000</div>
+        <div id="balance" class="mono" style="font-size:20px; font-weight:800;">0</div>
       </div>
       <div>
         <div class="muted">怪物屬性</div>
@@ -244,6 +247,13 @@
   <!-- 掛載遊戲腳本（請與 index.html 同資料夾） -->
   <script src="slot.js"></script>
   <script src="combat.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw.js')
+        .catch(err => console.error('SW registration failed:', err));
+    }
+  </script>
+
 </body>
 
 </html>
